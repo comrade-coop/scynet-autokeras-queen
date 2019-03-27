@@ -1,0 +1,6 @@
+[submodule "autokeras"]
+	path = autokeras
+	url = https://github.com/jhfjhfj1/autokeras
+[submodule "scynet-proto"]
+	path = scynet-proto
+	url = https://github.com/comrade-coop/scynet-proto.git
