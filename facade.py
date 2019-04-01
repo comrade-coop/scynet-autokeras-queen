@@ -21,9 +21,26 @@ from Scynet.Shared_pb2 import Void, Agent
 from Scynet.Hatchery_pb2_grpc import HatcheryStub
 from Scynet.Hatchery_pb2 import ComponentRegisterRequest, AgentRegisterRequest
 
+import sys
 
 class ComponentManager(BaseManager):
     pass
+
+class Hatchery:
+	def __init__(self, stub, componentId):
+		self.componentId = str(componentId)
+		self.stub = stub
+
+	def RegisterAgent(self, model):		
+		agent = Agent(uuid=str( uuid.uuid4() ), eggData=model, componentType="pytorch_executor", price=0, componentId=self.componentId )
+
+		try:
+			print( self.stub.RegisterAgent(AgentRegisterRequest(agent=agent)) )
+		except:
+			print(sys.exc_info())
+		print("Uploaded")
+		return 0
+
 
 class ComponentFacade(ComponentServicer):
 	def __init__(self, registry, hatchery):
@@ -70,12 +87,15 @@ class Main:
 		self.port = port
 		self.channel = grpc.insecure_channel('localhost:9998')
 		self.hatchery = HatcheryStub(self.channel)
+		self.component_uuid = uuid.uuid4()
+
+		ComponentManager.register('Hatchery', callable= lambda: Hatchery(self.hatchery, self.component_uuid))
+
 
 	def register(self, port):
 		#TODO: Better way to find the bound ip's
-		self.component_uuid = uuid.uuid4()
 		request = ComponentRegisterRequest(uuid=str(self.component_uuid), address=f"127.0.0.1:{port}" )
-		request.runnerType[:] =["autokeras_queen", "keras_executor"]
+		request.runnerType[:] =["autokeras_queen", "pytorch_executor"]
 
 		print( self.hatchery.RegisterComponent(request) )
 		print( "Component registered." )
@@ -83,7 +103,7 @@ class Main:
 	def serve(self):
 
 		with ComponentManager() as manager:
-			registry = AgentRegistry(manager)
+			registry = AgentRegistry()
 
 			logging_interceptor = LoggingInterceptor( logging.getLogger(__name__) )
 			server = grpc.server(
@@ -98,7 +118,7 @@ class Main:
 			server.start()
 			print(f"Listening on: 127.0.0.1:{self.port}")
 			
-			queen = Queen()
+			queen = Queen(manager.Hatchery())
 			queen.start()
 
 			print("Queen started, now producing agents")

@@ -2,15 +2,20 @@ from multiprocessing import Process, Value, Array
 import time 
 
 import pickle
-import os
+import os, io
 
 from autokeras import ImageClassifier
 from autokeras.search import Searcher, BayesianSearcher
 from autokeras.preprocessor import OneHotEncoder
 
+import torch
+import uuid
 import numpy as np
 
 import dataset_provider
+
+from Scynet.Shared_pb2 import Agent
+
 
 clf = None
 
@@ -63,18 +68,28 @@ class ObservableSearcher(BayesianSearcher):
 				
 		if new_best:
 			print("Saving new best!")
-			model = graph.produce_keras_model().save("./model.h5")
+			model = graph.produce_model()
+		
+			
+			buffer = io.BytesIO()
+
+			torch.save(model, buffer)
+			self.queen.publish_agent(bytes(buffer.getbuffer()))
+			# model = graph.produce_model().save("./model.h5")
 
 		return super().add_model(metric_value, loss, graph, model_id)
 
 class Queen(Process):
-	def __init__(self, **kwargs):
+	def __init__(self, hatchery):
 		super(Queen, self).__init__()
 
+		self.hatchery = hatchery
 		self.dataset = "./dataset"
 		self.path = "res"
 		
-		
+	def publish_agent(self, model):
+		self.hatchery.RegisterAgent(model)
+
 	def prepare(self, path, x_train, y_train):
 		global clf
 		# TODO: find a better way to make our own Searcher
@@ -84,6 +99,7 @@ class Queen(Process):
 			print(f"Resuming")
 
 		# TODO: Fix resume after debug
+		ObservableSearcher.queen = self
 		clf = self.clf = ImageClassifier(verbose=True, augment=False, path=path, resume=False, search_type=ObservableSearcher)
 		
 
