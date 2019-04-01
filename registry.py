@@ -1,7 +1,7 @@
 class AgentRegistry:
-	def __init__(self, manager):
+	def __init__(self):
 		self.running = {}
-		self.manager = manager
+
 
 	def start_agent(self, agent):
 		self.running[agent.uuid] = agent

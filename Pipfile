@@ -9,6 +9,9 @@ verify_ssl = true
 ipython = "*"
 numpy = "*"
 grpcio-tools = "*"
+keras = "*"
+tensorflow = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.6"

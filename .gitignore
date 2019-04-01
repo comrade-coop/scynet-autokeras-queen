@@ -1,4 +1,5 @@
 dataset
 res
 *.h5
-Scynet
+Scynet/*
+!Scynet/__init__.py
