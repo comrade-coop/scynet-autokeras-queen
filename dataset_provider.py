@@ -26,7 +26,7 @@ def run(path, train_size=7*24, test_size=3*24):
         assert(x_train.shape[0] == y_train.shape[0])
         assert(x_test.shape[0] == y_test.shape[0])
 
-        start = x_train.shape[0]-train_size
+        start = x_train.shape[0] - train_size
         end = test_size        
 
         #x_train = x_train[start:]

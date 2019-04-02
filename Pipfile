@@ -12,6 +12,7 @@ grpcio-tools = "*"
 keras = "*"
 tensorflow = "*"
 pandas = "*"
+confluent-kafka = "*"
 
 [requires]
 python_version = "3.6"

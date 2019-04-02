@@ -21,7 +21,7 @@ Autokeras doesn't work very well with pipenv so pip install it
 
 ```
 cd autokeras
-pip install .
+pip install -e .
 ```
 
 

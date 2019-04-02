@@ -7,7 +7,7 @@ import logging
 import uuid
 
 from autokeras_queen_agent import Queen
-from keras_executor_agent import KerasExecutor
+from pytorch_executor_agent import TorchExecutor
 from multiprocessing.managers import BaseManager
 
 from registry import AgentRegistry
@@ -19,7 +19,7 @@ from Scynet.Component_pb2 import AgentStatusResponse, ListOfAgents
 from Scynet.Component_pb2_grpc import ComponentServicer, add_ComponentServicer_to_server
 from Scynet.Shared_pb2 import Void, Agent
 from Scynet.Hatchery_pb2_grpc import HatcheryStub
-from Scynet.Hatchery_pb2 import ComponentRegisterRequest, AgentRegisterRequest
+from Scynet.Hatchery_pb2 import ComponentRegisterRequest, AgentRegisterRequest, ComponentUnregisterRequest
 
 import sys
 
@@ -35,10 +35,11 @@ class Hatchery:
 		agent = Agent(uuid=str( uuid.uuid4() ), eggData=model, componentType="pytorch_executor", price=0, componentId=self.componentId )
 
 		try:
-			print( self.stub.RegisterAgent(AgentRegisterRequest(agent=agent)) )
+			print(f"Registering Agent(uuid={agent.uuid}, price={agent.price}, componentType={agent.componentType}, componentId={agent.componentId})")
+			self.stub.RegisterAgent(AgentRegisterRequest(agent=agent))
 		except:
 			print(sys.exc_info())
-		print("Uploaded")
+		print("Registered")
 		return 0
 
 
@@ -50,10 +51,9 @@ class ComponentFacade(ComponentServicer):
 
 
 	def AgentStart(self, request, context):
-		if request.egg.agentType == "keras_executor": 
-			agent = KerasExecutor(request.egg.uuid, request.egg)
-		elif request.egg.agentType == "pytorch_executor":
-			pass
+		if request.egg.componentType == "pytorch_executor": 
+			agent = TorchExecutor(request.egg.uuid, request.egg)
+		
 
 		self.registry.start_agent(agent)
 		return Void()
@@ -134,10 +134,16 @@ class Main:
 				while True:
 					time.sleep(_ONE_DAY_IN_SECONDS)
 			except KeyboardInterrupt:
+				self.hatchery.UnregisterComponent(ComponentUnregisterRequest(uuid=str(main.component_uuid)))
 				server.stop(0)
 
 
 if __name__ == '__main__':
-	logging.basicConfig()
-	main = Main()
-	main.serve()
+	try:
+		logging.basicConfig()
+		main = Main()
+		main.serve()
+	finally:
+		# bookkeeping
+		pass
+		
