@@ -2,7 +2,7 @@ from multiprocessing import Process, Value, Array
 import time 
 
 import pickle
-import os, io
+import os, io, sys
 
 from autokeras import ImageClassifier
 from autokeras.search import Searcher, BayesianSearcher
@@ -11,18 +11,11 @@ from autokeras.preprocessor import OneHotEncoder
 import torch
 import uuid
 import numpy as np
-
 import dataset_provider
-
 from Scynet.Shared_pb2 import Agent
 
-
 clf = None
-
-
 producer = None
-
-
 
 def fp_fn_metrics(y_test, y):
 	assert(y.shape == y_test.shape)
@@ -41,7 +34,6 @@ def fp_fn_metrics(y_test, y):
 			else:
 				fn += 1
 	return (fp, fn)
-
 
 def evaluate(x_test, y_test):
 	y_test = y_test.flatten()
@@ -74,6 +66,7 @@ class ObservableSearcher(BayesianSearcher):
 			buffer = io.BytesIO()
 
 			torch.save(model, buffer)
+			torch.save(model, f"./model.torch")
 			self.queen.publish_agent(bytes(buffer.getbuffer()))
 			# model = graph.produce_model().save("./model.h5")
 
@@ -86,6 +79,9 @@ class Queen(Process):
 		self.hatchery = hatchery
 		self.dataset = "./dataset"
 		self.path = "res"
+
+		#save the output to a log file
+
 		
 	def publish_agent(self, model):
 		self.hatchery.RegisterAgent(model)
