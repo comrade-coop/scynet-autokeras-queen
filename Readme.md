@@ -24,6 +24,10 @@ cd autokeras
 pip install -e .
 ```
 
+Generate protobuf files.
 
+```
+./generate.sh
+```
 
 

@@ -1,8 +1,8 @@
 import pickle
-import argparse
 from confluent_kafka import Producer
-import numpy
+# import numpy
 from Scynet.Shared_pb2 import Blob, Shape
+
 
 def numpy_to_blob(array):
     shape = Shape()
@@ -10,6 +10,7 @@ def numpy_to_blob(array):
     blob = Blob(shape=shape)
     blob.data.extend(array.astype(float).flat)
     return blob
+
 
 if __name__ == '__main__':
 
@@ -29,14 +30,14 @@ if __name__ == '__main__':
         #         print(row[0])
         #     input()
         try:
-            for index, row in enumerate(data):      
+            for index, row in enumerate(data):
                 producer.poll(0)
-                            
-                producer.produce('dataset_producer', numpy_to_blob(row).SerializeToString(), str(index))
+
+                producer.produce('dataset_producer', numpy_to_blob(
+                    row).SerializeToString(), str(index))
                 print(row.shape)
                 producer.flush()
 
                 input()
         finally:
             producer.flush()
-        
