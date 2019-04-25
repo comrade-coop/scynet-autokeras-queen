@@ -33,10 +33,10 @@ class TorchExecutor(Process):
                 'auto.offset.reset': 'earliest'
             })
 
-            self.consumer.subscribe(['dataset_producer'])
+            self.consumer.subscribe(list(self.egg.inputs))
 
             while True:
-                msg = self.consumer.poll(1.0)
+                msg = self.consumer.poll()
 
                 if msg is None:
                     continue
@@ -48,12 +48,9 @@ class TorchExecutor(Process):
                 blob.ParseFromString(msg.value())
                 data = np.array(blob.data)
                 data = data.reshape([1] + list(blob.shape.dimension)[::-1])
-                print(data.shape)
 
-                print("Heartbeat: " + self.egg.uuid)
                 result = self.model(torch.from_numpy(data).float())
                 blob = numpy_to_blob(result.detach().numpy())
-                print(blob)
 
                 self.producer.poll(0)
                 self.producer.produce(self.egg.uuid, blob.SerializeToString())
@@ -61,3 +58,4 @@ class TorchExecutor(Process):
 
         finally:
             self.producer.flush()
+            self.consumer.close()

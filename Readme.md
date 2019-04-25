@@ -17,7 +17,7 @@ git submodule init
 git submodule update
 ```
 
-Autokeras doesn't work very well with pipenv so pip install it
+Autokeras doesn't work very well with pipenv so pip install it.
 
 ```
 cd autokeras
@@ -30,4 +30,9 @@ Generate protobuf files.
 ./generate.sh
 ```
 
+Run the project.
 
+```
+python facade.py
+# or `pipenv run python facade.py`, if you don't have pipenv shell running
+```

@@ -30,11 +30,16 @@ class Hatchery:
         self.componentId = str(componentId)
         self.stub = stub
 
-    def RegisterAgent(self, model):
-        agent = Agent(uuid=str(uuid.uuid4()), eggData=model,
-                      componentType="pytorch_executor", price=0, componentId=self.componentId)
+    def RegisterAgent(self, model, inputs):
+        agent = Agent(
+            uuid=str(uuid.uuid4()),
+            eggData=model,
+            inputs=inputs,
+            componentType="pytorch_executor",
+            componentId=self.componentId
+        )
 
-        print(f"Registering Agent(uuid={agent.uuid}, price={agent.price}, componentType={agent.componentType}, componentId={agent.componentId})")
+        print(f"Registering Agent(uuid={agent.uuid})")
         try:
             self.stub.RegisterAgent(AgentRegisterRequest(agent=agent))
         except Exception:
@@ -85,8 +90,7 @@ class Main:
         self.hatchery = HatcheryStub(self.channel)
         self.component_uuid = uuid.uuid4()
 
-        ComponentManager.register('Hatchery', callable=lambda: Hatchery(
-            self.hatchery, self.component_uuid))
+        ComponentManager.register('Hatchery', callable=lambda: Hatchery(self.hatchery, self.component_uuid))
 
     def register(self, port):
         # TODO: Better way to find the bound ip's
@@ -116,7 +120,7 @@ class Main:
             server.start()
             print(f"Listening on: 127.0.0.1:{self.port}")
 
-            queen = Queen(manager.Hatchery())
+            queen = Queen(manager.Hatchery(), 'distribution-BalanceLastSeen', '331d591b-184d-4e7c-b075-9841181c05c1')
             queen.start()
 
             print("Queen started, now producing agents")

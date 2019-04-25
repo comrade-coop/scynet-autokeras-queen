@@ -8,7 +8,7 @@ from autokeras.search import BayesianSearcher
 # from autokeras.preprocessor import OneHotEncoder
 
 import torch
-import dataset_provider
+import kafka_dataset
 
 clf = None
 producer = None
@@ -72,17 +72,18 @@ class ObservableSearcher(BayesianSearcher):
 
 
 class Queen(Process):
-    def __init__(self, hatchery):
+    def __init__(self, hatchery, input, target):
         super(Queen, self).__init__()
 
         self.hatchery = hatchery
-        self.dataset = "./dataset"
+        self.input = input
+        self.target = target
         self.path = "res"
 
         # save the output to a log file
 
     def publish_agent(self, model):
-        self.hatchery.RegisterAgent(model)
+        self.hatchery.RegisterAgent(model, [self.input])
 
     def prepare(self, path, x_train, y_train):
         global clf
@@ -96,7 +97,7 @@ class Queen(Process):
             verbose=True, augment=False, path=path, resume=False, search_type=ObservableSearcher)
 
     def run(self):
-        (x_train, y_train), (x_test, y_test) = dataset_provider.run(self.dataset)
+        (x_train, y_train), (x_test, y_test) = kafka_dataset.run(self.input, self.target)
 
         self.prepare(self.path, x_train, y_train)
 
