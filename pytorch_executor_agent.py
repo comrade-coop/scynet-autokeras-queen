@@ -2,6 +2,7 @@ from multiprocessing import Process
 import torch
 import numpy as np
 import io
+from collections import deque
 from confluent_kafka import Producer, Consumer
 
 from Scynet.Shared_pb2 import Blob, Shape
@@ -23,6 +24,8 @@ class TorchExecutor(Process):
 
         buffer = io.BytesIO(egg.eggData)
         self.model = torch.load(buffer)
+        x_windowing = 48  # FIXME: Hardcode
+        self.window = deque(maxlen=x_windowing)
 
     def run(self):
         try:
@@ -49,12 +52,13 @@ class TorchExecutor(Process):
                 data = np.array(blob.data)
                 data = data.reshape([1] + list(blob.shape.dimension)[::-1])
 
-                result = self.model(torch.from_numpy(data).float())
-                blob = numpy_to_blob(result.detach().numpy())
+                self.window.append(data)
+                if len(self.window) == self.window.maxlen:
+                    result = self.model(torch.from_numpy(np.array(self.window)).float())
+                    blob = numpy_to_blob(result.detach().numpy())
 
-                self.producer.poll(0)
-                self.producer.produce(self.egg.uuid, blob.SerializeToString())
-                print(f"Produced: {result}")
+                    self.producer.poll(0)
+                    self.producer.produce(self.egg.uuid, blob.SerializeToString())
 
         finally:
             self.producer.flush()

@@ -115,12 +115,15 @@ class Main:
                 ComponentFacade(registry, self.hatchery), server)
 
             self.port = server.add_insecure_port(f"0.0.0.0:{self.port}")
-            self.register(self.port)
+            try:
+                self.register(self.port)
+            except Exception:
+                pass
 
             server.start()
             print(f"Listening on: 127.0.0.1:{self.port}")
 
-            queen = Queen(manager.Hatchery(), 'distribution-BalanceLastSeen', '331d591b-184d-4e7c-b075-9841181c05c1')
+            queen = Queen(manager.Hatchery(), '30bdf7fc-8c8d-4de0-b0cf-ef65fffa7844', '331d591b-184d-4e7c-b075-9841181c05c1')
             queen.start()
 
             print("Queen started, now producing agents")
