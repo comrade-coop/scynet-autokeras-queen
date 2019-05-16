@@ -42,9 +42,10 @@ class Hatchery:
         print(f"Registering Agent(uuid={agent.uuid})")
         try:
             self.stub.RegisterAgent(AgentRegisterRequest(agent=agent))
+            print("Registered")
         except Exception:
             print(sys.exc_info())
-        print("Registered")
+            print("Failed to register!")
 
 
 class ComponentFacade(ComponentServicer):

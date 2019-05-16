@@ -59,7 +59,7 @@ def run(x_topic, y_topic, test_size=30 * 24):
     if result_data[0].shape[0] > test_size:
         result = ((result_data[0][:-test_size], result_data[1][:-test_size]), (result_data[0][-test_size:], result_data[1][-test_size:]))
     else:
-        result = (result_data, (np.empty([0] + result_data[0].shape[1:]), np.empty([0] + result_data[1].shape[1:])))
+        result = (result_data, (np.empty((0,) + result_data[0].shape[1:]), np.empty((0,) + result_data[1].shape[1:])))
 
     if x_windowing != 0:
         result = ((window_stack(result[0][0], 1, x_windowing), result[0][1][x_windowing - 1:]), (window_stack(result[1][0], 1, x_windowing), result[1][1][x_windowing - 1:]))
