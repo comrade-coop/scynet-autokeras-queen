@@ -30,16 +30,17 @@ class Hatchery:
         self.componentId = str(componentId)
         self.stub = stub
 
-    def RegisterAgent(self, model, inputs):
+    def RegisterAgent(self, model, inputs, performance):
         agent = Agent(
             uuid=str(uuid.uuid4()),
             eggData=model,
             inputs=inputs,
             componentType="pytorch_executor",
-            componentId=self.componentId
+            componentId=self.componentId,
+            performance=performance
         )
 
-        print(f"Registering Agent(uuid={agent.uuid})")
+        print(f"Registering Agent(uuid={agent.uuid}, performance={agent.performance})")
         try:
             self.stub.RegisterAgent(AgentRegisterRequest(agent=agent))
             print("Registered")

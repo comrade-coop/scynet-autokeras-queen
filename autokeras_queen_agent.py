@@ -65,7 +65,7 @@ class ObservableSearcher(BayesianSearcher):
 
             torch.save(model, buffer)
             torch.save(model, f"./model.torch")
-            self.queen.publish_agent(bytes(buffer.getbuffer()))
+            self.queen.publish_agent(bytes(buffer.getbuffer()), 1 / loss)
             # model = graph.produce_model().save("./model.h5")
 
         return super().add_model(metric_value, loss, graph, model_id)
@@ -82,8 +82,8 @@ class Queen(Process):
 
         # save the output to a log file
 
-    def publish_agent(self, model):
-        self.hatchery.RegisterAgent(model, [self.input])
+    def publish_agent(self, model, performance):
+        self.hatchery.RegisterAgent(model, [self.input], performance)
 
     def prepare(self, path, x_train, y_train):
         global clf
@@ -97,10 +97,17 @@ class Queen(Process):
             verbose=True, augment=False, path=path, resume=False, search_type=ObservableSearcher)
 
     def run(self):
-        (x_train, y_train), (x_test, y_test) = kafka_dataset.run(self.input, self.target)
+        while True:
+            try:
+                (x_train, y_train), (x_test, y_test) = kafka_dataset.run(self.input, self.target)
 
-        self.prepare(self.path, x_train, y_train)
+                self.prepare(self.path, x_train, y_train)
 
-        clf.fit(x_train, y_train, time_limit=12 * 60 * 60)
-        clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
-        evaluate(x_test, y_test)
+                #clf.fit(x_train, y_train, time_limit=30)
+                clf.fit(x_train, y_train, time_limit=12 * 60 * 60)
+                clf.final_fit(x_train, y_train, x_test, y_test, retrain=True)
+                evaluate(x_test, y_test)
+            except KeyboardInterrupt:
+                break
+            except BaseException:
+                pass
