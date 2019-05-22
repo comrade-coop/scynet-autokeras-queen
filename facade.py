@@ -86,11 +86,11 @@ class LoggingInterceptor(grpc.ServerInterceptor):
 # TODO: Rewrite with: https://github.com/google/pinject
 # TODO: Use this: https://github.com/BVLC/caffe/blob/master/python/caffe/io.py#L36
 class Main:
-    def __init__(self, port=0):
+    def __init__(self, _uuid=None, port=0):
         self.port = port
         self.channel = grpc.insecure_channel('localhost:9998')
         self.hatchery = HatcheryStub(self.channel)
-        self.component_uuid = uuid.uuid4()
+        self.component_uuid = _uuid or uuid.uuid4()
 
         ComponentManager.register('Hatchery', callable=lambda: Hatchery(self.hatchery, self.component_uuid))
 
@@ -141,8 +141,20 @@ class Main:
 
 if __name__ == '__main__':
     try:
+        from argparse import ArgumentParser
+
+        parser = ArgumentParser(description="Scynet Autokeras queen")
+        parser.add_argument(
+            "uuid", metavar="UUID", type=str, nargs="?",
+            help="the UUID to use when registering the component.", default=None)
+        parser.add_argument(
+            "port", metavar="PORT", type=int, nargs="?",
+            help="the PORT to try using when registering the component.", default=0)
+
+        args = parser.parse_args()
+
         logging.basicConfig()
-        main = Main()
+        main = Main(args.uuid, args.port)
         main.serve()
     finally:
         # bookkeeping
